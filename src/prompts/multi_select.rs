@@ -146,9 +146,11 @@ impl<'a> MultiSelect<'a> {
 
         let mut render = TermThemeRenderer::new(term, self.theme);
         let mut sel = 0;
+        let mut prompt_string: String = String::from("");
 
         if let Some(ref prompt) = self.prompt {
-            render.multi_select_prompt(prompt)?;
+            prompt_string = String::from(prompt);
+            // render.multi_select_prompt(prompt)?;
         }
 
         let mut size_vec = Vec::new();
@@ -164,38 +166,56 @@ impl<'a> MultiSelect<'a> {
         }
 
         let mut checked: Vec<bool> = self.defaults.clone();
+        let mut search_string: String = String::from("");
+        let original_items = self.items.clone();
 
         loop {
-            for (idx, item) in self
-                .items
+            let render_prompt_str = format!("{} {}", prompt_string, search_string);
+            render.clear()?;
+            render.multi_select_prompt(&render_prompt_str)?;
+            let filtered_indexed_items: Vec<_> = original_items
+                .iter()
+                .enumerate()
+                .filter(|&(_, item)| search_string.len() == 0 || item.contains(&search_string))
+                .map(|(idx, item)| (item, idx))
+                .collect();
+
+            let filtered_items: Vec<_> = filtered_indexed_items
+                .iter()
+                .map(|(item, _)| item)
+                .collect();
+
+            for (idx, item) in filtered_items
                 .iter()
                 .enumerate()
                 .skip(page * capacity)
                 .take(capacity)
             {
-                render.multi_select_prompt_item(item, checked[idx], sel == idx)?;
+                // Render the prompt and selected text if it exists
+                let (_, orig_idx) = filtered_indexed_items[idx];
+                render.multi_select_prompt_item(item, checked[orig_idx], sel == idx)?;
             }
 
             term.hide_cursor()?;
             term.flush()?;
 
             match term.read_key()? {
-                Key::ArrowDown | Key::Char('j') => {
+                Key::ArrowDown => {
                     if sel == !0 {
                         sel = 0;
                     } else {
-                        sel = (sel as u64 + 1).rem(self.items.len() as u64) as usize;
+                        sel = (sel as u64 + 1).rem(filtered_items.len() as u64) as usize;
                     }
                 }
-                Key::ArrowUp | Key::Char('k') => {
+                Key::ArrowUp => {
                     if sel == !0 {
-                        sel = self.items.len() - 1;
+                        sel = filtered_items.len() - 1;
                     } else {
-                        sel = ((sel as i64 - 1 + self.items.len() as i64)
-                            % (self.items.len() as i64)) as usize;
+                        sel = ((sel as i64 - 1 + filtered_items.len() as i64)
+                            % (filtered_items.len() as i64)) as usize;
                     }
                 }
-                Key::ArrowLeft | Key::Char('h') => {
+                Key::ArrowLeft => {
                     if self.paged {
                         if page == 0 {
                             page = pages - 1;
@@ -206,7 +226,7 @@ impl<'a> MultiSelect<'a> {
                         sel = page * capacity;
                     }
                 }
-                Key::ArrowRight | Key::Char('l') => {
+                Key::ArrowRight => {
                     if self.paged {
                         if page == pages - 1 {
                             page = 0;
@@ -218,7 +238,10 @@ impl<'a> MultiSelect<'a> {
                     }
                 }
                 Key::Char(' ') => {
-                    checked[sel] = !checked[sel];
+                    // TODO: Fetch the original index from the items list
+                    // and add update the checked array entries
+                    let (_, orig_idx) = filtered_indexed_items[sel];
+                    checked[orig_idx] = !checked[orig_idx];
                 }
                 Key::Escape => {
                     if self.clear {
@@ -269,6 +292,14 @@ impl<'a> MultiSelect<'a> {
                         .enumerate()
                         .filter_map(|(idx, checked)| if checked { Some(idx) } else { None })
                         .collect());
+                }
+                Key::Char(x) => {
+                    search_string.push(x);
+                }
+                Key::Backspace => {
+                    if search_string.len() > 0 {
+                        search_string.pop();
+                    }
                 }
                 _ => {}
             }
