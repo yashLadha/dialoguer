@@ -25,7 +25,7 @@ pub struct MultiSelect<'a> {
     clear: bool,
     theme: &'a dyn Theme,
     paged: bool,
-    page_size: u32
+    page_size: u32,
 }
 
 impl<'a> Default for MultiSelect<'a> {
@@ -49,7 +49,7 @@ impl<'a> MultiSelect<'a> {
             prompt: None,
             theme,
             paged: false,
-            page_size: 10
+            page_size: 10,
         }
     }
 
@@ -145,7 +145,11 @@ impl<'a> MultiSelect<'a> {
         }
 
         let capacity = if self.paged {
-            if self.page_size > 0 { self.page_size as usize } else { 10 as usize }
+            if self.page_size > 0 {
+                self.page_size as usize
+            } else {
+                10 as usize
+            }
         } else {
             self.items.len()
         };
@@ -184,7 +188,10 @@ impl<'a> MultiSelect<'a> {
             let filtered_indexed_items: Vec<_> = original_items
                 .iter()
                 .enumerate()
-                .filter(|&(_, item)| search_string.len() == 0 || item.contains(&search_string))
+                .filter(|&(_, item)| {
+                    search_string.len() == 0
+                        || item.to_lowercase().contains(&search_string.to_lowercase())
+                })
                 .map(|(idx, item)| (item, idx))
                 .collect();
 
