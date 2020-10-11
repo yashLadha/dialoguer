@@ -25,6 +25,7 @@ pub struct MultiSelect<'a> {
     clear: bool,
     theme: &'a dyn Theme,
     paged: bool,
+    page_size: u32
 }
 
 impl<'a> Default for MultiSelect<'a> {
@@ -48,12 +49,19 @@ impl<'a> MultiSelect<'a> {
             prompt: None,
             theme,
             paged: false,
+            page_size: 10
         }
     }
 
     /// Enables or disables paging
     pub fn paged(&mut self, val: bool) -> &mut MultiSelect<'a> {
         self.paged = val;
+        self
+    }
+
+    /// Declares the page size for the element
+    pub fn page_size(&mut self, val: u32) -> &mut MultiSelect<'a> {
+        self.page_size = if val <= 0 { 10 } else { val };
         self
     }
 
@@ -137,7 +145,7 @@ impl<'a> MultiSelect<'a> {
         }
 
         let capacity = if self.paged {
-            term.size().0 as usize - 1
+            if self.page_size > 0 { self.page_size as usize } else { 10 as usize }
         } else {
             self.items.len()
         };
