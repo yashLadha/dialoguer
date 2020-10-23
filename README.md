@@ -1,4 +1,4 @@
-# dialoguer
+# termprompt 
 
 Forked from https://github.com/mitsuhiko/dialoguer
 

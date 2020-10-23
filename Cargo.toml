@@ -1,18 +1,16 @@
 [package]
-name = "dialoguer"
+name = "termprompt"
 description = "A command line prompting library."
 version = "0.7.1"
 edition = "2018"
 authors = [
-	"Armin Ronacher <armin.ronacher@active-4.com>",
-	"Pavan Kumar Sunkara <pavan.sss1991@gmail.com>"
+	"Yash Ladha <admin@yashladha.in>"
 ]
 keywords = ["cli", "menu", "prompt"]
 categories = ["command-line-interface"]
 license = "MIT"
-homepage = "https://github.com/mitsuhiko/dialoguer"
-repository = "https://github.com/mitsuhiko/dialoguer"
-documentation = "https://docs.rs/dialoguer"
+homepage = "https://github.com/yashladha/dialoguer"
+repository = "https://github.com/yashladha/dialoguer"
 readme = "README.md"
 
 [dependencies]
